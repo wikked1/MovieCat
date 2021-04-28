@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "rebuild": "npx shx rm dist/* && tsc",
+    "rebuild": "npx shx rm -rf dist/* && tsc",
     "build": "npm run rebuild",
     "launch": "node ./dist/bot.js",
     "start": "npm run rebuild && npm run launch"
