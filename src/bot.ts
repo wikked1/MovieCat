@@ -24,7 +24,7 @@ async function movie(msg: Discord.Message, argv: string[]) {
         });
         if (lines.length > 0) {
             var item = lines[Math.floor(Math.random() * lines.length)];
-            msg.reply(`i'm trying my best ... ${item} ??`);
+            msg.reply(`i'm trying my best >.< ... ${item} ??`);
         } else {
             msg.reply("uh oh, kitty brain does not contain that knowledge right now");
         }
