@@ -6,9 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "rebuild": "npx shx rm -rf dist/* && tsc",
-    "build": "npm run rebuild",
+    "build": "tsc",
     "launch": "node ./dist/bot.js",
-    "start": "npm run rebuild && npm run launch"
+    "start": "npm run build && npm run launch"
   },
   "keywords": [],
   "author": "",
