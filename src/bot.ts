@@ -7,16 +7,16 @@ client.on("ready", () => {
 });
 client.login(auth.token);
 
+const RE_YEARTAG = /\([^)]*\d{4}[^)]*\)/;
+const RE_COMMAND = /\s*~(\S+)\s*(.*)\s*/;
+
 client.on("message", msg => {
     const contentLower = msg.content.toLowerCase();
     const match = RE_COMMAND.exec(contentLower);
     if (match) {
         const command = match[1];
         const args = match[2];
-        let argv: string[] = [];
-        if (args) {
-            argv = args.split(/\s+/);
-        }
+        let argv = wsSplit(args);
         console.log(`command[${command}] args[${args}]`);
         if (command == "movie") {
             movie(msg, argv);
@@ -27,15 +27,6 @@ client.on("message", msg => {
         }
     }
 });
-
-
-const RE_YEAR = /\([^)]*\d{4}[^)]*\)/;
-const RE_COMMAND = /\s*~(\S+)\s*(.*)\s*/;
-
-function isMovie(str: string) {
-    return (RE_YEAR.test(str) || str.indexOf("✓") != -1);
-}
-
 
 async function movie(msg: Discord.Message, argv: string[]) {
     const data = await makeMovieData(msg);
@@ -48,33 +39,15 @@ async function movie(msg: Discord.Message, argv: string[]) {
     }
 }
 
-
-
-// async function movie(msg: Discord.Message, argv: string[]) {
-//     const channel = await client.channels.cache.get(auth.channel);
-//     if (channel instanceof TextChannel) {
-//         const msgs = await channel.messages.fetch({ limit: 100 });
-//         const lines: string[] = msgsToLines(msgs);
-//         let movies = lines.filter(line => isMovie(line));
-//         let nonMovies = lines.filter(line => !isMovie(line));
-//         movies.forEach(movie => {
-//             console.log(movie);
-//         });
-//         console.log("================================");
-//         console.log("================================");
-//         nonMovies.forEach(movie => {
-//             console.log(movie);
-//         });
-//         if (movies.length > 0) {
-//             var item = movies[Math.floor(Math.random() * movies.length)];
-//             msg.reply(`i'm trying my best >.< ... ${item} ??`);
-//         } else {
-//             msg.reply("uh oh, kitty brain does not contain that knowledge right now");
-//         }
-//     } else {
-//         msg.reply(`no such channel ${auth.channel} ?! how can this be ?! beep`)
-//     }
-// }
+async function categories(msg: Discord.Message, argv: string[]) {
+    const data: MoviesData = await makeMovieData(msg);
+    let categoriesWithCounts: string[] = [];
+    data.categories.forEach(category => {
+        let cmovies = data.cat2movies.get(category)!;
+        categoriesWithCounts.push(`**${category}** [${cmovies.length}]`)
+    });
+    msg.reply(categoriesWithCounts.join(", "));
+}
 
 function strip(s: string) {
     const re = /^\s*|\s*$/g;
@@ -115,39 +88,6 @@ interface MoviesData {
     categories: string[];
 };
 
-async function categories(msg: Discord.Message, argv: string[]) {
-    const data: MoviesData = await makeMovieData(msg);
-    let categoriesWithCounts: string[] = [];
-    data.categories.forEach(category => {
-        let cmovies = data.cat2movies.get(category)!;
-        categoriesWithCounts.push(`${category} [${cmovies.length}]`)
-    });
-    msg.reply(categoriesWithCounts.join(", "));
-}
-
-// async function categories(msg: Discord.Message, argv: string[]) {
-//     const channel = await client.channels.cache.get(auth.channel);
-//     if (channel instanceof TextChannel) {
-//         const msgs = await channel.messages.fetch({ limit: 100 });
-//         const lines = msgsToLines(msgs);
-//         let allmovies: string[] = [];
-//         let cat2movies = new Map<string, string[]>();
-//         sortEmOut(lines, cat2movies, allmovies);
-//         let categories = Array.from(cat2movies.keys());
-//         icsort(categories);
-//         let ccategories: string[] = [];
-//         categories.forEach(category => {
-//             let cmovies = cat2movies.get(category)!;
-//             ccategories.push(`${category} [${cmovies.length}]`)
-//         });
-//         let i = 0;
-//         msg.reply(ccategories.join(", "));
-//     } else {
-//         msg.reply(`no such channel ${auth.channel} ?! how can this be ?! beep`)
-//     }
-// }
-
-
 function processLines(lines: string[], cat2movies: Map<string, string[]>, allmovies: string[]) {
     let curcat: string = "";
     lines.forEach(line => {
@@ -179,4 +119,17 @@ function msgsToLines(msgs: Discord.Collection<string, Discord.Message>) {
         lines.push(...mlines);
     });
     return lines;
+}
+
+
+function isMovie(str: string) {
+    return (RE_YEARTAG.test(str) || str.indexOf("✓") != -1);
+}
+
+function wsSplit(str: string): string[] {
+    let result: string[] = [];
+    if (str) {
+        result = str.split(/\s+/g);
+    }
+    return result;
 }
