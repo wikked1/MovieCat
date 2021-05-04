@@ -8,11 +8,13 @@ client.on("ready", () => {
 client.login(auth.token);
 
 const RE_YEARTAG = /\([^)]*\d{4}[^)]*\)/;
-const RE_COMMAND = /\s*~(\S+)\s*(.*)\s*/;
+const RE_COMMAND = /^[ \t]*~([^~]\S*)\s*(.*)\s*/i;
+
 
 client.on("message", msg => {
-    const contentLower = msg.content.toLowerCase();
-    const match = RE_COMMAND.exec(contentLower);
+    if (isSelfMsg(msg))
+        return;
+    const match = RE_COMMAND.exec(msg.content);
     if (match) {
         const command = match[1];
         const args = match[2];
@@ -66,6 +68,7 @@ async function makeMovieData(msg: Discord.Message): Promise<MoviesData> {
         const lines = msgsToLines(msgs);
         let allmovies: string[] = [];
         let cat2movies = new Map<string, string[]>();
+        let movie2cats = new Map<string, string[]>();
         processLines(lines, cat2movies, allmovies);
         let categories = Array.from(cat2movies.keys());
         icsort(categories);
@@ -132,4 +135,13 @@ function wsSplit(str: string): string[] {
         result = str.split(/\s+/g);
     }
     return result;
+}
+
+function isSelfMsg(msg: Discord.Message) {
+    if (msg && msg.author && msg.author.id) {
+        if (client && client.user && client.user.id) {
+            return msg.author.id == client.user.id;
+        }
+    }
+    return false;
 }
