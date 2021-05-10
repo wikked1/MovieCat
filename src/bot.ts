@@ -24,15 +24,20 @@ client.on("message", msg => {
             movie(msg, argv);
         } else if (command == "categories") {
             categories(msg, argv);
+        } else if (command == "newmovie") {
+            movie(msg, argv, true);
         } else {
             msg.reply(`i don't know how to '${command}' -- my skull is still a bit soft`)
         }
     }
 });
 
-async function movie(msg: Discord.Message, argv: string[]) {
+async function movie(msg: Discord.Message, argv: string[], newMovie: boolean = false) {
     const data = await makeMovieData(msg);
-    const movies = data.allmovies;
+    let movies = data.allmovies;
+    if (newMovie) {
+        movies = movies.filter(x => x.indexOf("\u2713")==-1);
+    }
     if (movies.length > 0) {
         var item = movies[Math.floor(Math.random() * movies.length)];
         msg.reply(`i'm trying my best >.< ... **${item}** ??`);
@@ -126,7 +131,7 @@ function msgsToLines(msgs: Discord.Collection<string, Discord.Message>) {
 
 
 function isMovie(str: string) {
-    return (RE_YEARTAG.test(str) || str.indexOf("✓") != -1);
+    return (RE_YEARTAG.test(str));
 }
 
 function wsSplit(str: string): string[] {
