@@ -1,5 +1,6 @@
 import Discord, { TextChannel } from "discord.js";
 import auth from "./auth.json";
+import { evaluate } from "mathjs";
 
 const client = new Discord.Client();
 client.on("ready", () => {
@@ -26,8 +27,15 @@ client.on("message", msg => {
             categories(msg, argv);
         } else if (command == "newmovie") {
             movie(msg, argv, true);
+        } else if (command == "calc" || command == "morenumbers") {
+            try {
+                const result = evaluate(args);
+                msg.channel.send(result);
+            } catch (ex) {
+                msg.reply(ex.message);
+            }
         } else {
-            msg.reply(`i don't know how to '${command}' -- my skull is still a bit soft`)
+            // msg.reply(`i don't know how to '${command}' !! >.<`)
         }
     }
 });
@@ -36,7 +44,7 @@ async function movie(msg: Discord.Message, argv: string[], newMovie: boolean = f
     const data = await makeMovieData(msg);
     let movies = data.allmovies;
     if (newMovie) {
-        movies = movies.filter(x => x.indexOf("\u2713")==-1);
+        movies = movies.filter(x => x.indexOf("\u2713") == -1);
     }
     if (movies.length > 0) {
         var item = movies[Math.floor(Math.random() * movies.length)];
@@ -143,6 +151,10 @@ function wsSplit(str: string): string[] {
 }
 
 function isSelfMsg(msg: Discord.Message) {
+    if (msg && msg.content && /~.*~/.test(msg.content)) {
+        console.log("~~")
+        return true;
+    }
     if (msg && msg.author && msg.author.id) {
         if (client && client.user && client.user.id) {
             return msg.author.id == client.user.id;
